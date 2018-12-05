@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@
 package com.jfinal.plugin.activerecord.generator;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -49,10 +50,18 @@ public class DataDictionaryGenerator {
 		}
 	}
 	
+	public String getDataDictionaryOutputDir() {
+		return dataDictionaryOutputDir;
+	}
+	
 	public void setDataDictionaryFileName(String dataDictionaryFileName) {
 		if (StrKit.notBlank(dataDictionaryFileName)) {
 			this.dataDictionaryFileName = dataDictionaryFileName;
 		}
+	}
+	
+	public String getDataDictionaryFileName() {
+		return dataDictionaryFileName;
 	}
 	
 	public void generate(List<TableMeta> tableMetas) {
@@ -65,7 +74,7 @@ public class DataDictionaryGenerator {
 			generateTable(tableMeta, ret);
 		}
 		
-		writeToFile(ret);
+		writeToFile(ret.toString());
 	}
 	
 	protected void generateTable(TableMeta tableMeta, StringBuilder ret) {
@@ -214,24 +223,24 @@ public class DataDictionaryGenerator {
 	/**
 	 * _DataDictionary.txt 覆盖写入
 	 */
-	protected void writeToFile(StringBuilder ret) {
-		FileWriter fw = null;
+	protected void writeToFile(String ret) {
+		File dir = new File(dataDictionaryOutputDir);
+		if (!dir.exists()) {
+			dir.mkdirs();
+		}
+		
+		String target = dataDictionaryOutputDir + File.separator + dataDictionaryFileName;
+		OutputStreamWriter osw = null;
 		try {
-			File dir = new File(dataDictionaryOutputDir);
-			if (!dir.exists()) {
-				dir.mkdirs();
-			}
-			
-			String target = dataDictionaryOutputDir + File.separator + dataDictionaryFileName;
-			fw = new FileWriter(target);
-			fw.write(ret.toString());
+			osw = new OutputStreamWriter(new FileOutputStream(target), "UTF-8");
+			osw.write(ret);
 		}
 		catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 		finally {
-			if (fw != null) {
-				try {fw.close();} catch (IOException e) {LogKit.error(e.getMessage(), e);}
+			if (osw != null) {
+				try {osw.close();} catch (IOException e) {LogKit.error(e.getMessage(), e);}
 			}
 		}
 	}

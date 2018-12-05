@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ public class JsonRender extends Render {
 	 * It creates the extra attribute below while tomcat take SSL open.
 	 * http://git.oschina.net/jfinal/jfinal/issues/10
 	 */
-	private static final Set<String> excludedAttrs = new HashSet<String>() {
+	protected static final Set<String> excludedAttrs = new HashSet<String>() {
 		private static final long serialVersionUID = 9186138395157680676L;
 		{
 			add("javax.servlet.request.ssl_session");
@@ -45,6 +45,7 @@ public class JsonRender extends Render {
 			add("javax.servlet.request.ssl_session_mgr");
 			add("javax.servlet.request.key_size");
 			add("javax.servlet.request.cipher_suite");
+			add("_res");	// I18nInterceptor 中使用的 _res
 		}
 	};
 	
@@ -80,17 +81,17 @@ public class JsonRender extends Render {
 	 * 1: 官方的 MIME type为application/json, 见 http://en.wikipedia.org/wiki/MIME_type
 	 * 2: IE 不支持 application/json, 在 ajax 上传文件完成后返回 json时 IE 提示下载文件
 	 */
-	private static final String contentType = "application/json; charset=" + getEncoding();
-	private static final String contentTypeForIE = "text/html; charset=" + getEncoding();
-	private boolean forIE = false;
+	protected static final String contentType = "application/json; charset=" + getEncoding();
+	protected static final String contentTypeForIE = "text/html; charset=" + getEncoding();
+	protected boolean forIE = false;
 	
 	public JsonRender forIE() {
 		forIE = true;
 		return this;
 	}
 	
-	private String jsonText;
-	private String[] attrs;
+	protected String jsonText;
+	protected String[] attrs;
 	
 	public JsonRender() {
 		
@@ -145,7 +146,7 @@ public class JsonRender extends Render {
 	}
 	
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	private void buildJsonText() {
+	protected void buildJsonText() {
 		Map map = new HashMap();
 		if (attrs != null) {
 			for (String key : attrs) {

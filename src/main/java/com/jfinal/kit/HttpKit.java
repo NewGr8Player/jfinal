@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -279,11 +279,12 @@ public class HttpKit {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+		/* 去掉 close() 否则后续 ActionReporter 中的 getPara() 在部分 tomcat 中会报 IOException : Stream closed
 		finally {
 			if (br != null) {
 				try {br.close();} catch (IOException e) {LogKit.error(e.getMessage(), e);}
 			}
-		}
+		}*/
 	}
 	
 	@Deprecated

@@ -9,6 +9,7 @@ import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.jfinal.kit.StrKit;
 import com.jfinal.render.Render;
 import com.jfinal.render.RenderException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,10 +18,10 @@ import java.util.Map;
  */
 public class QrCodeRender extends Render {
 
-	private String content;
-	private int width;
-	private int height;
-	private ErrorCorrectionLevel errorCorrectionLevel;
+	protected String content;
+	protected int width;
+	protected int height;
+	protected ErrorCorrectionLevel errorCorrectionLevel;
 
 	/**
 	 * 构造方法，经测试不指定纠错参数时，默认使用的是 'L' 最低级别纠错参数
@@ -55,7 +56,7 @@ public class QrCodeRender extends Render {
 		init(content, width, height, errorCorrectionLevel);
 	}
 
-	private void init(String content, int width, int height, char errorCorrectionLevel) {
+	protected void init(String content, int width, int height, char errorCorrectionLevel) {
 		if (errorCorrectionLevel == 'H') {
 			init(content, width, height, ErrorCorrectionLevel.H);
 		} else if (errorCorrectionLevel == 'Q') {
@@ -69,7 +70,7 @@ public class QrCodeRender extends Render {
 		}
 	}
 
-	private void init(String content, int width, int height, ErrorCorrectionLevel errorCorrectionLevel) {
+	protected void init(String content, int width, int height, ErrorCorrectionLevel errorCorrectionLevel) {
 		if (StrKit.isBlank(content)) {
 			throw new IllegalArgumentException("content 不能为空");
 		}
@@ -104,7 +105,13 @@ public class QrCodeRender extends Render {
 
 			// 经测试 200 X 200 大小的二维码使用 "png" 格式只有 412B，而 "jpg" 却达到 15KB
 			MatrixToImageWriter.writeToStream(bitMatrix, "png", response.getOutputStream());    // format: "jpg"、"png"
-		}catch (Exception e) {
+		} catch (IOException e) {	// ClientAbortException、EofException 直接或间接继承自 IOException
+			String name = e.getClass().getSimpleName();
+        	if ("ClientAbortException".equals(name) || "EofException".equals(name)) {
+        	} else {
+        		throw new RenderException(e);
+        	}
+		} catch (Exception e) {
 			throw new RenderException(e);
 		}
 	}

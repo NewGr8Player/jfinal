@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,8 @@
 
 package com.jfinal.template.expr.ast;
 
-import java.lang.reflect.Array;
+import com.jfinal.kit.HashKit;
 import com.jfinal.kit.StrKit;
-import com.jfinal.plugin.activerecord.Model;
-import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.template.TemplateException;
 import com.jfinal.template.stat.Location;
 import com.jfinal.template.stat.ParseException;
@@ -40,6 +38,7 @@ public class Field extends Expr {
 	private Expr expr;
 	private String fieldName;
 	private String getterName;
+	private long getterNameHash;
 	
 	public Field(Expr expr, String fieldName, Location location) {
 		if (expr == null) {
@@ -48,6 +47,8 @@ public class Field extends Expr {
 		this.expr = expr;
 		this.fieldName = fieldName;
 		this.getterName = "get" + StrKit.firstCharToUpperCase(fieldName);
+		// fnv1a64 hash 到比 String.hashCode() 更大的 long 值范围
+		this.getterNameHash = HashKit.fnv1a64(getterName);
 		this.location = location;
 	}
 	
@@ -64,54 +65,34 @@ public class Field extends Expr {
 			throw new TemplateException("Can not accessed by \"" + fieldName + "\" field from null target", location);
 		}
 		
-		Class<?> targetClass = target.getClass();
-		String key = FieldKit.getFieldKey(targetClass, getterName);
-		MethodInfo getter;
+		
 		try {
-			getter = MethodKit.getGetterMethod(key, targetClass, getterName);
+			Class<?> targetClass = target.getClass();
+			Object key = FieldKeyBuilder.instance.getFieldKey(targetClass, getterNameHash);
+			FieldGetter fieldGetter = FieldKit.getFieldGetter(key, targetClass, fieldName);
+			if (fieldGetter.notNull()) {
+				return fieldGetter.get(target, fieldName);
+			}
+		} catch (TemplateException | ParseException e) {
+			throw e;
 		} catch (Exception e) {
 			throw new TemplateException(e.getMessage(), location, e);
 		}
 		
-		try {
-			if (getter != null) {
-				return getter.invoke(target, ExprList.NULL_OBJECT_ARRAY);
-			}
-			if (target instanceof Model) {
-				return ((Model<?>)target).get(fieldName);
-			}
-			if (target instanceof Record) {
-				return ((Record)target).get(fieldName);
-			}
-			if (target instanceof java.util.Map) {
-				return ((java.util.Map<?, ?>)target).get(fieldName);
-			}
-			// if (target instanceof com.jfinal.kit.Ret) {
-				// return ((com.jfinal.kit.Ret)target).get(fieldName);
-			// }
-			java.lang.reflect.Field field = FieldKit.getField(key, targetClass, fieldName);
-			if (field != null) {
-				return field.get(target);
-			}
-			
-			// 支持获取数组长度： array.length
-			if ("length".equals(fieldName) && target.getClass().isArray()) {
-				return Array.getLength(target);
-			}
-		} catch (Exception e) {
-			throw new TemplateException(e.getMessage(), location, e);
-		}
 		
 		if (scope.getCtrl().isNullSafe()) {
 			return null;
 		}
-		
 		if (expr instanceof Id) {
 			String id = ((Id)expr).getId();
-			throw new TemplateException("Field not found: \"" + id + "." + fieldName + "\" and getter method not found: \"" + id + "." + getterName + "()\"", location);
+			throw new TemplateException("public field not found: \"" + id + "." + fieldName + "\" and public getter method not found: \"" + id + "." + getterName + "()\"", location);
 		}
-		throw new TemplateException("Field not found: \"" + fieldName + "\" and getter method not found: \"" + getterName + "()\"", location);
+		throw new TemplateException("public field not found: \"" + fieldName + "\" and public getter method not found: \"" + getterName + "()\"", location);
 	}
+	
+	// private Long buildFieldKey(Class<?> targetClass) {
+		// return targetClass.getName().hashCode() ^ getterNameHash;
+	// }
 }
 
 

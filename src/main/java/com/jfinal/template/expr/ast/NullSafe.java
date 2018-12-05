@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,17 +49,21 @@ public class NullSafe extends Expr {
 		Ctrl ctrl = scope.getCtrl();
 		boolean oldNullSafeValue = ctrl.isNullSafe();
 		
-		Object ret;
 		try {
 			ctrl.setNullSafe(true);
-			ret = left.eval(scope);
+			Object ret = left.eval(scope);
+			if (ret != null) {
+				return ret;
+			}
 		} finally {
 			ctrl.setNullSafe(oldNullSafeValue);
 		}
 		
-		return ret == null && right != null ? right.eval(scope) : ret;
+		// right 表达式处于 null safe 区域之外
+		return right != null ? right.eval(scope) : null;
 	}
 }
+
 
 
 

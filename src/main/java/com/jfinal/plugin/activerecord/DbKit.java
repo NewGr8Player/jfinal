@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,8 +42,8 @@ public final class DbKit {
 	 */
 	static Config brokenConfig = Config.createBrokenConfig();
 	
-	private static Map<Class<? extends Model>, Config> modelToConfig = new HashMap<Class<? extends Model>, Config>();
-	private static Map<String, Config> configNameToConfig = new HashMap<String, Config>();
+	private static Map<Class<? extends Model>, Config> modelToConfig = new HashMap<Class<? extends Model>, Config>(512, 0.5F);
+	private static Map<String, Config> configNameToConfig = new HashMap<String, Config>(32, 0.25F);
 	
 	static final Object[] NULL_PARA_ARRAY = new Object[0];
 	public static final String MAIN_CONFIG_NAME = "main";
@@ -125,7 +125,8 @@ public final class DbKit {
 	@SuppressWarnings("unchecked")
 	public static Class<? extends Model> getUsefulClass(Class<? extends Model> modelClass) {
 		// com.demo.blog.Blog$$EnhancerByCGLIB$$69a17158
-		return (Class<? extends Model>)((modelClass.getName().indexOf("EnhancerByCGLIB") == -1 ? modelClass : modelClass.getSuperclass()));
+		// return (Class<? extends Model>)((modelClass.getName().indexOf("EnhancerByCGLIB") == -1 ? modelClass : modelClass.getSuperclass()));
+		return (Class<? extends Model>)(modelClass.getName().indexOf("$$EnhancerBy") == -1 ? modelClass : modelClass.getSuperclass());
 	}
 }
 

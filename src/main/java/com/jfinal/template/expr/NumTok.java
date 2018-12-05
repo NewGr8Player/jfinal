@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ import com.jfinal.template.stat.ParseException;
  */
 public class NumTok extends Tok {
 	
-	private Object value;
+	private Number value;
 	
 	NumTok(Sym sym, String s, int radix, boolean isScientificNotation, Location location) {
 		super(sym, location.getRow());
@@ -101,3 +101,8 @@ public class NumTok extends Tok {
 		return sym.value() + " : " + value;
 	}
 }
+
+
+
+
+

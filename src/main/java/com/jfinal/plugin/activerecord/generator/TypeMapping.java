@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import java.util.Map;
 public class TypeMapping {
 	
 	@SuppressWarnings("serial")
-	protected Map<String, String> map = new HashMap<String, String>() {{
+	protected Map<String, String> map = new HashMap<String, String>(32) {{
 		// java.util.Data can not be returned
 		// java.sql.Date, java.sql.Time, java.sql.Timestamp all extends java.util.Data so getDate can return the three types data
 		// put("java.util.Date", "java.util.Date");
@@ -75,6 +75,9 @@ public class TypeMapping {
 		
 		// short
 		put("java.lang.Short", "java.lang.Short");
+		
+		// byte
+		put("java.lang.Byte", "java.lang.Byte");
 	}};
 	
 	public String getType(String typeString) {

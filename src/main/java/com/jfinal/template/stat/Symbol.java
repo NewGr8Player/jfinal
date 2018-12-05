@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ enum Symbol {
 	 * 扩展指令在得到 # id ( 序列以后才要求得到正确的后续 Token 序列，否则仅仅 return fail()
 	 */
 	@SuppressWarnings("serial")
-	private static final Map<String, Symbol> keywords = new HashMap<String, Symbol>() {{
+	private static final Map<String, Symbol> keywords = new HashMap<String, Symbol>(64) {{
 		put(Symbol.IF.getName(), IF);
 		put(Symbol.ELSEIF.getName(), ELSEIF);
 		put(Symbol.ELSE.getName(), ELSE);

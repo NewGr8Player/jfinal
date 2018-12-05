@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,9 @@ import com.jfinal.core.JFinal;
  */
 public class RedirectRender extends Render {
 	
-	private String url;
-	private boolean withQueryString;
-	private static final String contextPath = getContxtPath();
+	protected String url;
+	protected boolean withQueryString;
+	protected static final String contextPath = getContxtPath();
 	
 	static String getContxtPath() {
 		String cp = JFinal.me().getContextPath();
@@ -69,6 +69,17 @@ public class RedirectRender extends Render {
 	
 	public void render() {
 		String finalUrl = buildFinalUrl();
+		
+		// 支持 https 协议下的重定向
+		if (!finalUrl.startsWith("http")) {	// 跳过 http/https 已指定过协议类型的 url
+			if (request.getScheme().equals("https")) {
+				if (finalUrl.charAt(0) != '/') {
+					finalUrl = "https://" + request.getServerName() + "/" + finalUrl;
+				} else {
+					finalUrl = "https://" + request.getServerName() + finalUrl;
+				}
+			}
+		}
 		
 		try {
 			response.sendRedirect(finalUrl);	// always 302

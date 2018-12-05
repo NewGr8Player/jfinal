@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import java.util.Map;
 public class JavaType {
 	
 	@SuppressWarnings("serial")
-	private Map<String, Class<?>> strToType = new HashMap<String, Class<?>>() {{
+	private Map<String, Class<?>> strToType = new HashMap<String, Class<?>>(32) {{
 		
 		// varchar, char, enum, set, text, tinytext, mediumtext, longtext
 		put("java.lang.String", java.lang.String.class);
@@ -70,6 +70,11 @@ public class JavaType {
 		// binary, varbinary, tinyblob, blob, mediumblob, longblob
 		// qjd project: print_info.content varbinary(61800);
 		put("[B", byte[].class);
+		
+		// 支持需要保持 short 与 byte 而非转成 int 的场景
+		// 目前作用于Controller.getModel()/getBean()
+		put("java.lang.Short", java.lang.Short.class);
+		put("java.lang.Byte", java.lang.Byte.class);
 	}};
 	
 	public Class<?> getType(String typeString) {

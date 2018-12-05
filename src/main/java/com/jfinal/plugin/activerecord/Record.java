@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -278,6 +278,11 @@ public class Record implements Serializable {
 		return n != null ? n.shortValue() : null;
 	}
 	
+	public Byte getByte(String column) {
+		Number n = getNumber(column);
+		return n != null ? n.byteValue() : null;
+	}
+	
 	/**
 	 * Get column of mysql type: bit, tinyint(1)
 	 */
@@ -308,18 +313,22 @@ public class Record implements Serializable {
 	}
 	
 	public String toString() {
+		if (columns == null) {
+			return "{}";
+		}
 		StringBuilder sb = new StringBuilder();
 		sb.append('{');
 		boolean first = true;
 		for (Entry<String, Object> e : getColumns().entrySet()) {
-			if (first)
+			if (first) {
 				first = false;
-			else
+			} else {
 				sb.append(", ");
-			
+			}
 			Object value = e.getValue();
-			if (value != null)
+			if (value != null) {
 				value = value.toString();
+			}
 			sb.append(e.getKey()).append(':').append(value);
 		}
 		sb.append('}');
@@ -328,14 +337,14 @@ public class Record implements Serializable {
 	
 	public boolean equals(Object o) {
 		if (!(o instanceof Record))
-            return false;
+			return false;
 		if (o == this)
 			return true;
-		return this.getColumns().equals(((Record)o).getColumns());
+		return getColumns().equals(((Record)o).getColumns());
 	}
 	
 	public int hashCode() {
-		return getColumns() == null ? 0 : getColumns().hashCode();
+		return getColumns().hashCode();
 	}
 	
 	/**

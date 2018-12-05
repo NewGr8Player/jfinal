@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,18 @@ public class Jackson extends Json {
 	// generateNullValue 通过设置此值，可临时改变默认生成 null value 的行为
 	protected Boolean generateNullValue = null;
 	
-	protected ObjectMapper objectMapper = new ObjectMapper();
+	protected ObjectMapper objectMapper;
+	
+	public Jackson() {
+		objectMapper = new ObjectMapper();
+		config();
+	}
+	
+	// https://gitee.com/jfinal/jfinal-weixin/issues/I875U
+	protected void config() {
+		objectMapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
+		objectMapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, true);
+	}
 	
 	public static void setDefaultGenerateNullValue(boolean defaultGenerateNullValue) {
 		Jackson.defaultGenerateNullValue = defaultGenerateNullValue;

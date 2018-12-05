@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 
 package com.jfinal.template.ext.directive;
 
-import java.io.Writer;
 import com.jfinal.template.Directive;
 import com.jfinal.template.Env;
+import com.jfinal.template.io.Writer;
 import com.jfinal.template.stat.Scope;
 
 /**
@@ -52,11 +52,12 @@ public class EscapeDirective extends Directive {
 			case '>':
 				ret.append("&gt;");
 				break;
-			case '\"':
+			case '"':
 				ret.append("&quot;");
 				break;
 			case '\'':
-				ret.append("&apos;");	// IE 不支持 &apos; 考虑 &#39;
+				// ret.append("&apos;");	// IE 不支持 &apos; 考虑 &#39;
+				ret.append("&#39;");
 				break;
 			case '&':
 				ret.append("&amp;");

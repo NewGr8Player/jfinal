@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ public class SqlKit {
 	
 	static final String SQL_TEMPLATE_MAP_KEY = "_SQL_TEMPLATE_MAP_";
 	static final String SQL_PARA_KEY = "_SQL_PARA_";
-	static final String PARA_ARRAY_KEY = "_PARA_ARRAY_";
+	static final String PARA_ARRAY_KEY = "_PARA_ARRAY_"; // 此参数保持不动，已被用于模板取值 _PARA_ARRAY_[n]
 	
 	private String configName;
 	private boolean devMode;
@@ -49,10 +49,10 @@ public class SqlKit {
 		engine = new Engine(configName);
 		engine.setDevMode(devMode);
 		
-		engine.addDirective("namespace", new NameSpaceDirective());
-		engine.addDirective("sql", new SqlDirective());
-		engine.addDirective("para", new ParaDirective());
-		engine.addDirective("p", new ParaDirective());		// 配置 #para 指令的别名指令 #p，不建议使用，在此仅为兼容 3.0 版本
+		engine.addDirective("namespace", NameSpaceDirective.class);
+		engine.addDirective("sql", SqlDirective.class);
+		engine.addDirective("para", ParaDirective.class);
+		engine.addDirective("p", ParaDirective.class);		// 配置 #para 指令的别名指令 #p，不建议使用，在此仅为兼容 3.0 版本
 	}
 	
 	public SqlKit(String configName) {
@@ -87,7 +87,7 @@ public class SqlKit {
 	}
 	
 	public synchronized void parseSqlTemplate() {
-		Map<String, Template> sqlTemplateMap = new HashMap<String, Template>();
+		Map<String, Template> sqlTemplateMap = new HashMap<String, Template>(512, 0.5F);
 		for (SqlSource ss : sqlSourceList) {
 			Template template = ss.isFile() ? engine.getTemplate(ss.file) : engine.getTemplate(ss.source);
 			Map<Object, Object> data = new HashMap<Object, Object>();
@@ -190,6 +190,7 @@ public class SqlKit {
 		data.put(SQL_PARA_KEY, sqlPara);
 		data.put(PARA_ARRAY_KEY, paras);
 		sqlPara.setSql(template.renderToString(data));
+		// data 为本方法中创建，不会污染用户数据，无需移除 SQL_PARA_KEY、PARA_ARRAY_KEY
 		return sqlPara;
 	}
 	

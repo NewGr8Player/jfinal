@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
+import com.jfinal.core.Const;
 import com.jfinal.core.Controller;
 
 /**
@@ -36,6 +37,16 @@ import com.jfinal.core.Controller;
  */
 public class InterceptorManager {
 	
+	private boolean injectDependency = Const.DEFAULT_INJECT_DEPENDENCY;
+	
+	public void setInjectDependency(boolean injectDependency) {
+		this.injectDependency = injectDependency;
+	}
+	
+	public boolean isInjectDependency() {
+		return injectDependency;
+	}
+	
 	public static final Interceptor[] NULL_INTERS = new Interceptor[0];
 	
 	// 控制层与业务层全局拦截器
@@ -43,10 +54,10 @@ public class InterceptorManager {
 	private Interceptor[] globalServiceInters = NULL_INTERS;
 	
 	// 单例拦截器
-	private final ConcurrentHashMap<Class<? extends Interceptor>, Interceptor> singletonMap = new ConcurrentHashMap<Class<? extends Interceptor>, Interceptor>();
+	private final ConcurrentHashMap<Class<? extends Interceptor>, Interceptor> singletonMap = new ConcurrentHashMap<Class<? extends Interceptor>, Interceptor>(32, 0.5F);
 	
 	// 业务层 Class 级别拦截器缓存
-	private final ConcurrentHashMap<Class<?>, Interceptor[]> serviceClassInters = new ConcurrentHashMap<Class<?>, Interceptor[]>();
+	private final ConcurrentHashMap<Class<?>, Interceptor[]> serviceClassInters = new ConcurrentHashMap<Class<?>, Interceptor[]>(32, 0.5F);
 	
 	private static final InterceptorManager me = new InterceptorManager();
 	
@@ -162,6 +173,9 @@ public class InterceptorManager {
 				result[i] = singletonMap.get(interceptorClasses[i]);
 				if (result[i] == null) {
 					result[i] = (Interceptor)interceptorClasses[i].newInstance();
+					if (injectDependency) {
+						Aop.inject(result[i]);
+					}
 					singletonMap.put(interceptorClasses[i], result[i]);
 				}
 			}
@@ -179,7 +193,7 @@ public class InterceptorManager {
 		addGlobalInterceptor(false, inters);
 	}
 	
-	private void addGlobalInterceptor(boolean forAction, Interceptor... inters) {
+	private synchronized void addGlobalInterceptor(boolean forAction, Interceptor... inters) {
 		if (inters == null || inters.length == 0) {
 			throw new IllegalArgumentException("interceptors can not be null.");
 		}
@@ -194,6 +208,9 @@ public class InterceptorManager {
 		}
 		
 		for (Interceptor inter : inters) {
+			if (injectDependency) {
+				Aop.inject(inter);
+			}
 			singletonMap.put(inter.getClass(), inter);
 		}
 		

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ public class FileSource implements ISource {
 		return lastModified != new File(finalFileName).lastModified();
 	}
 	
-	public String getKey() {
+	public String getCacheKey() {
 		return fileName;
 	}
 	
@@ -77,6 +77,9 @@ public class FileSource implements ISource {
 	}
 	
 	private String buildFinalFileName(String baseTemplatePath, String fileName) {
+		if (baseTemplatePath == null) {
+			return fileName;
+		}
 		char firstChar = fileName.charAt(0);
 		String finalFileName;
 		if (firstChar == '/' || firstChar == '\\') {

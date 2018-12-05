@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package com.jfinal.core;
 
 import java.lang.reflect.Method;
 import com.jfinal.aop.Interceptor;
+import com.jfinal.core.paragetter.ParaProcessor;
+import com.jfinal.core.paragetter.ParaProcessorBuilder;
 
 /**
  * Action
@@ -32,6 +34,8 @@ public class Action {
 	private final Interceptor[] interceptors;
 	private final String viewPath;
 	
+	private final ParaProcessor parameterGetter;
+	
 	public Action(String controllerKey, String actionKey, Class<? extends Controller> controllerClass, Method method, String methodName, Interceptor[] interceptors, String viewPath) {
 		this.controllerKey = controllerKey;
 		this.actionKey = actionKey;
@@ -40,6 +44,8 @@ public class Action {
 		this.methodName = methodName;
 		this.interceptors = interceptors;
 		this.viewPath = viewPath;
+		
+		this.parameterGetter = ParaProcessorBuilder.me.build(controllerClass, method);
 	}
 	
 	public Class<? extends Controller> getControllerClass() {
@@ -68,6 +74,10 @@ public class Action {
 	
 	public String getMethodName() {
 		return methodName;
+	}
+	
+	public ParaProcessor getParameterGetter() {
+		return parameterGetter;
 	}
 }
 

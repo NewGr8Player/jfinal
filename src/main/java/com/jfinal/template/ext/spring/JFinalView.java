@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
 
 package com.jfinal.template.ext.spring;
 
-import java.io.Writer;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,108 +57,122 @@ public class JFinalView extends AbstractTemplateView {
 			}
 		}
 		
-		Writer writer = response.getWriter();
-		JFinalViewResolver.engine.getTemplate(getUrl()).render(model, writer);
-		writer.flush();
+		try {
+			OutputStream os = response.getOutputStream();
+			JFinalViewResolver.engine.getTemplate(getUrl()).render(model, os);
+		} catch (Exception e) {	// 捕获 ByteWriter.close() 抛出的 RuntimeException
+			Throwable cause = e.getCause();
+			if (cause instanceof IOException) {	// ClientAbortException、EofException 直接或间接继承自 IOException
+				String name = cause.getClass().getSimpleName();
+				if ("ClientAbortException".equals(name) || "EofException".equals(name)) {
+					return ;
+				}
+			}
+			
+			throw e;
+		}
+	}
+
+	@SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
+	public static class InnerSession extends HashMap<Object, Object> implements HttpSession {
+		
+		private static final long serialVersionUID = -8679493647540628009L;
+		private HttpSession session;
+		
+		public InnerSession(HttpSession session) {
+			this.session = session;
+		}
+		
+		// HashMap 相关方法处理 ----------------------------------------------------
+		/**
+		 * 覆盖 HashMap 的 put
+		 */
+		public Object put(Object name, Object value) {
+			session.setAttribute((String)name, value);
+			return null;
+		}
+		
+		/**
+		 * 覆盖 HashMap 的 get
+		 */
+		public Object get(Object name) {
+			return session.getAttribute((String)name);
+		}
+		
+		// Session 相关方法处理 ----------------------------------------------------
+		public Object getAttribute(String key) {
+			return session.getAttribute(key);
+		}
+		
+		public Enumeration getAttributeNames() {
+			return session.getAttributeNames();
+		}
+		
+		public long getCreationTime() {
+			return session.getCreationTime();
+		}
+		
+		public String getId() {
+			return session.getId();
+		}
+		
+		public long getLastAccessedTime() {
+			return session.getLastAccessedTime();
+		}
+		
+		public int getMaxInactiveInterval() {
+			return session.getMaxInactiveInterval();
+		}
+		
+		public ServletContext getServletContext() {
+			return session.getServletContext();
+		}
+		
+		public javax.servlet.http.HttpSessionContext getSessionContext() {
+			return session.getSessionContext();
+		}
+		
+		public Object getValue(String key) {
+			return session.getValue(key);
+		}
+		
+		public String[] getValueNames() {
+			return session.getValueNames();
+		}
+		
+		public void invalidate() {
+			session.invalidate();
+		}
+		
+		public boolean isNew() {
+			return session.isNew();
+		}
+		
+		public void putValue(String key, Object value) {
+			session.putValue(key, value);
+		}
+		
+		public void removeAttribute(String key) {
+			session.removeAttribute(key);
+		}
+		
+		public void removeValue(String key) {
+			session.removeValue(key);
+		}
+		
+		public void setAttribute(String key, Object value) {
+			session.setAttribute(key, value);
+		}
+		
+		public void setMaxInactiveInterval(int maxInactiveInterval) {
+			session.setMaxInactiveInterval(maxInactiveInterval);
+		}
+		
+		public String toString() {
+			return session != null ? session.toString() : "null";
+		}
 	}
 }
-
-@SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
-class InnerSession extends HashMap<Object, Object> implements HttpSession {
-	
-	private static final long serialVersionUID = -8679493647540628009L;
-	private HttpSession session;
-	
-	public InnerSession(HttpSession session) {
-		this.session = session;
-	}
-	
-	// HashMap 相关方法处理 ----------------------------------------------------
-	/**
-	 * 覆盖 HashMap 的 put
-	 */
-	public Object put(Object name, Object value) {
-		session.setAttribute((String)name, value);
-		return null;
-	}
-	
-	/**
-	 * 覆盖 HashMap 的 get
-	 */
-	public Object get(Object name) {
-		return session.getAttribute((String)name);
-	}
-	
-	// Session 相关方法处理 ----------------------------------------------------
-	public Object getAttribute(String key) {
-		return session.getAttribute(key);
-	}
-	
-	public Enumeration getAttributeNames() {
-		return session.getAttributeNames();
-	}
-	
-	public long getCreationTime() {
-		return session.getCreationTime();
-	}
-	
-	public String getId() {
-		return session.getId();
-	}
-	
-	public long getLastAccessedTime() {
-		return session.getLastAccessedTime();
-	}
-	
-	public int getMaxInactiveInterval() {
-		return session.getMaxInactiveInterval();
-	}
-	
-	public ServletContext getServletContext() {
-		return session.getServletContext();
-	}
-	
-	public javax.servlet.http.HttpSessionContext getSessionContext() {
-		return session.getSessionContext();
-	}
-	
-	public Object getValue(String key) {
-		return session.getValue(key);
-	}
-	
-	public String[] getValueNames() {
-		return session.getValueNames();
-	}
-	
-	public void invalidate() {
-		session.invalidate();
-	}
-	
-	public boolean isNew() {
-		return session.isNew();
-	}
-	
-	public void putValue(String key, Object value) {
-		session.putValue(key, value);
-	}
-	
-	public void removeAttribute(String key) {
-		session.removeAttribute(key);
-	}
-	
-	public void removeValue(String key) {
-		session.removeValue(key);
-	}
-	
-	public void setAttribute(String key, Object value) {
-		session.setAttribute(key, value);
-	}
-	
-	public void setMaxInactiveInterval(int maxInactiveInterval) {
-		session.setMaxInactiveInterval(maxInactiveInterval);
-	}
-}
-
 
 
 

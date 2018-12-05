@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -122,7 +122,7 @@ public class RenderManager {
 		
 		String baseDownloadPath;
 		// 如果为绝对路径则直接使用，否则把 downloadPath 参数作为项目根路径的相对路径
-		if (PathKit.isAbsolutelyPath(downloadPath)) {
+		if (PathKit.isAbsolutePath(downloadPath)) {
 			baseDownloadPath = downloadPath;
 		} else {
 			baseDownloadPath = PathKit.getWebRootPath() + File.separator + downloadPath;

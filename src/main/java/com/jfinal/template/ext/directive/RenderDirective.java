@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,15 @@
 
 package com.jfinal.template.ext.directive;
 
-import java.io.Writer;
-import java.util.HashMap;
 import java.util.Map;
+import com.jfinal.kit.SyncWriteMap;
 import com.jfinal.template.Directive;
 import com.jfinal.template.EngineConfig;
 import com.jfinal.template.Env;
 import com.jfinal.template.TemplateException;
 import com.jfinal.template.expr.ast.Assign;
 import com.jfinal.template.expr.ast.ExprList;
+import com.jfinal.template.io.Writer;
 import com.jfinal.template.source.ISource;
 import com.jfinal.template.stat.Ctrl;
 import com.jfinal.template.stat.ParseException;
@@ -33,6 +33,7 @@ import com.jfinal.template.stat.Scope;
 import com.jfinal.template.stat.ast.Define;
 import com.jfinal.template.stat.ast.Include;
 import com.jfinal.template.stat.ast.Stat;
+import com.jfinal.template.stat.ast.StatList;
 
 /**
  * #render 指令用于动态渲染子模板，作为 include 指令的补充
@@ -59,7 +60,7 @@ import com.jfinal.template.stat.ast.Stat;
 public class RenderDirective extends Directive {
 	
 	private String parentFileName;
-	private Map<String, StatInfo> statInfoCache = new HashMap<String,StatInfo>();
+	private Map<String, SubStat> subStatCache = new SyncWriteMap<String, SubStat>(16, 0.5F);
 	
 	public void setExprList(ExprList exprList) {
 		int len = exprList.length();
@@ -69,7 +70,7 @@ public class RenderDirective extends Directive {
 		if (len > 1) {
 			for (int i = 1; i < len; i++) {
 				if (!(exprList.getExpr(i) instanceof Assign)) {
-					throw new ParseException("The " + i + "th parameter of #render directive must be an assignment expression", location);
+					throw new ParseException("The " + (i + 1) + "th parameter of #render directive must be an assignment expression", location);
 				}
 			}
 		}
@@ -107,62 +108,68 @@ public class RenderDirective extends Directive {
 		}
 		
 		String subFileName = Include.getSubFileName((String)value, parentFileName);
-		StatInfo statInfo = statInfoCache.get(subFileName);
-		if (statInfo == null) {
-			statInfo = parseStatInfo(env, subFileName);
-			statInfoCache.put(subFileName, statInfo);
-		} else if (env.getEngineConfig().isDevMode()) {
-			// statInfo.env.isSourceListModified() 逻辑可以支持 #render 子模板中的 #include 过来的子模板在 devMode 下在修改后可被重加载
-			if (statInfo.source.isModified() || statInfo.env.isSourceListModified()) {
-				statInfo = parseStatInfo(env, subFileName);
-				statInfoCache.put(subFileName, statInfo);
+		SubStat subStat = subStatCache.get(subFileName);
+		if (subStat == null) {
+			subStat = parseSubStat(env, subFileName);
+			subStatCache.put(subFileName, subStat);
+		} else if (env.isDevMode()) {
+			// subStat.env.isSourceListModified() 逻辑可以支持 #render 子模板中的 #include 过来的子模板在 devMode 下在修改后可被重加载
+			if (subStat.source.isModified() || subStat.env.isSourceListModified()) {
+				subStat = parseSubStat(env, subFileName);
+				subStatCache.put(subFileName, subStat);
 			}
 		}
 		
-		statInfo.stat.exec(statInfo.env, scope, writer);
+		subStat.exec(null, scope, writer);	// subStat.stat.exec(subStat.env, scope, writer);
+		
 		scope.getCtrl().setJumpNone();
 	}
 	
-	private StatInfo parseStatInfo(Env env, String subFileName) {
+	private SubStat parseSubStat(Env env, String subFileName) {
 		EngineConfig config = env.getEngineConfig();
-		// FileSource fileSource = new FileSource(config.getBaseTemplatePath(), subFileName, config.getEncoding());
-		ISource fileSource = config.getSourceFactory().getSource(config.getBaseTemplatePath(), subFileName, config.getEncoding());
+		// FileSource subFileSource = new FileSource(config.getBaseTemplatePath(), subFileName, config.getEncoding());
+		ISource subFileSource = config.getSourceFactory().getSource(config.getBaseTemplatePath(), subFileName, config.getEncoding());
 		
 		try {
-			EnvSub envSub = new EnvSub(env);
-			Stat stat = new Parser(envSub, fileSource.getContent(), subFileName).parse();
-			return new StatInfo(envSub, stat, fileSource);
+			SubEnv subEnv = new SubEnv(env);
+			StatList subStatList = new Parser(subEnv, subFileSource.getContent(), subFileName).parse();
+			return new SubStat(subEnv, subStatList.getActualStat(), subFileSource);
 		} catch (Exception e) {
 			throw new ParseException(e.getMessage(), location, e);
 		}
 	}
 	
-	private static class StatInfo {
-		EnvSub env;
-		Stat stat;
-		ISource source;
+	public static class SubStat extends Stat {
+		public SubEnv env;
+		public Stat stat;
+		public ISource source;
 		
-		StatInfo(EnvSub env, Stat stat, ISource source) {
+		public SubStat(SubEnv env, Stat stat, ISource source) {
 			this.env = env;
 			this.stat = stat;
 			this.source = source;
 		}
+		
+		@Override
+		public void exec(Env env, Scope scope, Writer writer) {
+			stat.exec(this.env, scope, writer);
+		}
 	}
 	
 	/**
-	 * EnvSub 用于将子模板与父模板中的模板函数隔离开来，
+	 * SubEnv 用于将子模板与父模板中的模板函数隔离开来，
 	 * 否则在子模板被修改并被重新解析时会再次添加子模板中的
 	 * 模板函数，从而抛出异常
 	 * 
-	 * EnvSub 也可以使子模板中定义的模板函数不与上层产生冲突，
+	 * SubEnv 也可以使子模板中定义的模板函数不与上层产生冲突，
 	 * 有利于动态型模板渲染的模块化
 	 * 
-	 * 注意： #render 子模板中定义的模板函数无法被上层调用
+	 * 注意： #render 子模板中定义的模板函数无法在父模板中调用
 	 */
-	private static class EnvSub extends Env {
-		Env parentEnv;
+	public static class SubEnv extends Env {
+		public Env parentEnv;
 		
-		public EnvSub(Env parentEnv) {
+		public SubEnv(Env parentEnv) {
 			super(parentEnv.getEngineConfig());
 			this.parentEnv = parentEnv;
 		}
@@ -170,6 +177,7 @@ public class RenderDirective extends Directive {
 		/**
 		 * 接管父类 getFunction()，先从子模板中找模板函数，找不到再去父模板中找
 		 */
+		@Override
 		public Define getFunction(String functionName) {
 			Define func = functionMap.get(functionName);
 			return func != null ? func : parentEnv.getFunction(functionName);

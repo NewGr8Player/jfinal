@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ package com.jfinal.plugin.activerecord;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.jfinal.kit.SyncWriteMap;
 
 /**
  * Db. Powerful database query and update tool box.
@@ -29,7 +29,7 @@ import java.util.Map;
 public class Db {
 	
 	private static DbPro MAIN = null;
-	private static final Map<String, DbPro> map = new HashMap<String, DbPro>();
+	private static final Map<String, DbPro> map = new SyncWriteMap<String, DbPro>(32, 0.25F);
 	
 	/**
 	 * for DbKit.addConfig(configName)
@@ -216,6 +216,14 @@ public class Db {
 		return MAIN.queryShort(sql);
 	}
 	
+	public static Byte queryByte(String sql, Object... paras) {
+		return MAIN.queryByte(sql, paras);
+	}
+	
+	public static Byte queryByte(String sql) {
+		return MAIN.queryByte(sql);
+	}
+	
 	public static Number queryNumber(String sql, Object... paras) {
 		return MAIN.queryNumber(sql, paras);
 	}
@@ -371,6 +379,25 @@ public class Db {
 	 */
 	public static boolean delete(String tableName, Record record) {
 		return MAIN.delete(tableName, record);
+	}
+	
+	/**
+	 * Execute delete sql statement.
+	 * @param sql an SQL statement that may contain one or more '?' IN parameter placeholders
+	 * @param paras the parameters of sql
+	 * @return the row count for <code>DELETE</code> statements, or 0 for SQL statements 
+	 *         that return nothing
+	 */
+	public static int delete(String sql, Object... paras) {
+		return MAIN.delete(sql, paras);
+	}
+	
+	/**
+	 * @see #delete(String, Object...)
+	 * @param sql an SQL statement
+	 */
+	public static int delete(String sql) {
+		return MAIN.delete(sql);
 	}
 	
 	static Page<Record> paginate(Config config, Connection conn, int pageNumber, int pageSize, String select, String sqlExceptSelect, Object... paras) throws SQLException {

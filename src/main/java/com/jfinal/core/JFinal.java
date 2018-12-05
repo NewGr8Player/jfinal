@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,7 @@ import com.jfinal.kit.LogKit;
 import com.jfinal.kit.PathKit;
 import com.jfinal.plugin.IPlugin;
 import com.jfinal.render.RenderManager;
-import com.jfinal.server.JettyServerForIDEA;
 import com.jfinal.server.IServer;
-import com.jfinal.server.ServerFactory;
 import com.jfinal.token.ITokenCache;
 import com.jfinal.token.TokenManager;
 import com.jfinal.upload.OreillyCos;
@@ -78,7 +76,12 @@ public final class JFinal {
 	}
 	
 	private void initHandler() {
-		Handler actionHandler = new ActionHandler(actionMapping, constants);
+		ActionHandler actionHandler = Config.getHandlers().getActionHandler();
+		if (actionHandler == null) {
+			actionHandler = new ActionHandler();
+		}
+		
+		actionHandler.init(actionMapping, constants);
 		handler = HandlerFactory.getHandler(Config.getHandlers().getHandlerList(), actionHandler);
 	}
 	
@@ -96,7 +99,7 @@ public final class JFinal {
 	}
 	
 	private void initActionMapping() {
-		actionMapping = new ActionMapping(Config.getRoutes(), Config.getInterceptors());
+		actionMapping = new ActionMapping(Config.getRoutes());
 		actionMapping.buildActionMapping();
 		Config.getRoutes().clear();
 	}
@@ -145,28 +148,38 @@ public final class JFinal {
 	}
 	
 	public static void start() {
-		server = ServerFactory.getServer();
+		server = com.jfinal.server.jetty.ServerFactory.getServer();
 		server.start();
 	}
 	
 	/**
-	 * 用于在 Eclipse 中，通过创建 main 方法的方式启动项目，支持执加载
+	 * 用于在 Eclipse 中，通过创建 main 方法的方式启动项目，支持热加载
 	 */
 	public static void start(String webAppDir, int port, String context, int scanIntervalSeconds) {
-		server = ServerFactory.getServer(webAppDir, port, context, scanIntervalSeconds);
+		server = com.jfinal.server.jetty.ServerFactory.getServer(webAppDir, port, context, scanIntervalSeconds);
 		server.start();
 	}
 	
 	/**
+	 * jfinal 3.5 更新(2018-09-01)：
+	 * 		由于 jfinal 3.5 解决了 IDEA 下 JFinal.start(四个参数) 无法启动的问题，
+	 * 		此方法已被废弃，建议使用 JFinal.start(四个参数) 带四个参数的 start()
+	 * 		方法来启动项目，IDEA 下也支持热加载，注意要先配置自动编译，jfinal 是
+	 * 		通过监测被编译的 class 文件的修改来触发热加载的
+	 * 
+	 * 
+	 * 
 	 * 用于在 IDEA 中，通过创建 main 方法的方式启动项目，不支持热加载
 	 * 本方法存在的意义在于此方法启动的速度比 maven 下的 jetty 插件要快得多
 	 * 
 	 * 注意：不支持热加载。建议通过 Ctrl + F5 快捷键，来快速重新启动项目，速度并不会比 eclipse 下的热加载慢多少
 	 *     实际操作中是先通过按 Alt + 5 打开 debug 窗口，才能按 Ctrl + F5 重启项目
 	 */
+	@Deprecated
 	public static void start(String webAppDir, int port, String context) {
-		server = new JettyServerForIDEA(webAppDir, port, context);
-		server.start();
+		// server = new JettyServerForIDEA(webAppDir, port, context);
+		// server.start();
+		start(webAppDir, port, context, 0);
 	}
 	
 	public static void stop() {
@@ -180,7 +193,7 @@ public final class JFinal {
 	 */
 	public static void main(String[] args) {
 		if (args == null || args.length == 0) {
-			server = ServerFactory.getServer();
+			server = com.jfinal.server.jetty.ServerFactory.getServer();
 			server.start();
 			return ;
 		}
@@ -191,7 +204,7 @@ public final class JFinal {
 			int port = Integer.parseInt(args[1]);
 			String context = args[2];
 			int scanIntervalSeconds = Integer.parseInt(args[3]);
-			server = ServerFactory.getServer(webAppDir, port, context, scanIntervalSeconds);
+			server = com.jfinal.server.jetty.ServerFactory.getServer(webAppDir, port, context, scanIntervalSeconds);
 			server.start();
 			return ;
 		}

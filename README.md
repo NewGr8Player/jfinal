@@ -1,4 +1,4 @@
-### JAVA 极速WEB+ORM框架 JFinal
+## JAVA 极速WEB+ORM框架 JFinal
 
 
 JFinal 是基于 Java 语言的极速 WEB + ORM 框架，其核心设计目标是开发迅速、代码量少、学习简单、功能强大、轻量级、易扩展、Restful。在拥有Java语言所有优势的同时再拥有ruby、python等动态语言的开发效率！为您节约更多时间，去陪恋人、家人和朋友 ;)
@@ -15,7 +15,7 @@ JFinal 是基于 Java 语言的极速 WEB + ORM 框架，其核心设计目标�
 - 多视图支持，支持FreeMarker、JSP、Velocity
 - 强大的Validator后端校验功能
 - 功能齐全，拥有struts2的绝大部分功能
-- 体积小仅538K
+- 体积小仅580K
 
 **JFinal 极速开发微信公众号欢迎你的加入: JFinal**
 
@@ -114,5 +114,10 @@ public class BlogInterceptor implements Interceptor {
 }
 ```
 
-**JFinal 官方网站：[http://www.jfinal.com](http://www.jfinal.com)**
+## 更多支持
+- JFinal 官方网站  [http://www.jfinal.com](http://www.jfinal.com/) 
+- 扫码关注官方微信公众号，第一时间尊享最新动向  
+
+![JFinal](http://www.jfinal.com/assets/img/jfinal_weixin_service_qr_code_150.jpg) 
+
 

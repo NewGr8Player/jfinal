@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import com.jfinal.template.stat.ast.Define;
 public class Env {
 	
 	protected EngineConfig engineConfig;
-	protected Map<String, Define> functionMap = new HashMap<String, Define>();
+	protected Map<String, Define> functionMap = new HashMap<String, Define>(16, 0.5F);
 	
 	// 代替 Template 持有该属性，便于在 #include 指令中调用 Env.addSource()
 	protected List<ISource> sourceList = null;
@@ -46,6 +46,10 @@ public class Env {
 	
 	public EngineConfig getEngineConfig() {
 		return engineConfig;
+	}
+	
+	public boolean isDevMode() {
+		return engineConfig.isDevMode();
 	}
 	
 	/**

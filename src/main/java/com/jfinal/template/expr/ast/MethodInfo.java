@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package com.jfinal.template.expr.ast;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
@@ -26,14 +25,14 @@ import java.lang.reflect.Modifier;
  */
 public class MethodInfo {
 	
-	protected final String key;
+	protected final Long key;
 	protected final Class<?> clazz;
 	protected final Method method;
 	
 	protected final boolean isVarArgs;
 	protected final Class<?>[] paraTypes;
 	
-	public MethodInfo(String key, Class<?> clazz, Method method) {
+	public MethodInfo(Long key, Class<?> clazz, Method method) {
 		this.key = key;
 		this.clazz = clazz;
 		this.method = method;
@@ -41,7 +40,7 @@ public class MethodInfo {
 		this.paraTypes = method.getParameterTypes();
 	}
 	
-	public Object invoke(Object target, Object... args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	public Object invoke(Object target, Object... args) throws ReflectiveOperationException {
 		if (isVarArgs) {
 			return invokeVarArgsMethod(target, args);
 		} else {
@@ -49,7 +48,7 @@ public class MethodInfo {
 		}
 	}
 	
-	protected Object invokeVarArgsMethod(Object target, Object[] argValues) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	protected Object invokeVarArgsMethod(Object target, Object[] argValues) throws ReflectiveOperationException {
 		Object[] finalArgValues = new Object[paraTypes.length];
 		
 		int fixedParaLength = paraTypes.length - 1;
@@ -64,7 +63,7 @@ public class MethodInfo {
 		return method.invoke(target, finalArgValues);
 	}
 	
-	public String getKey() {
+	public Long getKey() {
 		return key;
 	}
 	

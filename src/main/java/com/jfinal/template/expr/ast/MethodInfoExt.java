@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package com.jfinal.template.expr.ast;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
@@ -26,7 +25,7 @@ public class MethodInfoExt extends MethodInfo {
 	
 	protected Object objectOfExtensionClass;
 	
-	public MethodInfoExt(Object objectOfExtensionClass, String key, Class<?> clazz, Method method) {
+	public MethodInfoExt(Object objectOfExtensionClass, Long key, Class<?> clazz, Method method) {
 		super(key, clazz, method);
 		this.objectOfExtensionClass = objectOfExtensionClass;
 		
@@ -37,7 +36,7 @@ public class MethodInfoExt extends MethodInfo {
 		// this.paraTypes = newParaTypes;
 	}
 	
-	public Object invoke(Object target, Object... args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	public Object invoke(Object target, Object... args) throws ReflectiveOperationException {
 		Object[] finalArgs = new Object[args.length + 1];
 		finalArgs[0] = target;
 		
