@@ -26,6 +26,7 @@ import com.jfinal.template.expr.ast.FieldGetter;
 import com.jfinal.template.expr.ast.FieldKeyBuilder;
 import com.jfinal.template.expr.ast.FieldKit;
 import com.jfinal.template.expr.ast.MethodKit;
+import com.jfinal.template.io.EncoderFactory;
 import com.jfinal.template.source.ClassPathSourceFactory;
 import com.jfinal.template.source.ISource;
 import com.jfinal.template.source.ISourceFactory;
@@ -471,6 +472,17 @@ public class Engine {
 		return config.getEncoding();
 	}
 	
+	/**
+	 * Enjoy 模板引擎对 UTF-8 的 encoding 做过性能优化，某些偏门字符在
+	 * 被编码为 UTF-8 时会出现异常，此时可以通过继承扩展 EncoderFactory
+	 * 来解决编码异常，具体用法参考：
+	 *     http://www.jfinal.com/feedback/5340
+	 */
+	public Engine setEncoderFactory(EncoderFactory encoderFactory) {
+		config.setEncoderFactory(encoderFactory);
+		return this;
+	}
+	
 	public Engine setWriterBufferSize(int bufferSize) {
 		config.setWriterBufferSize(bufferSize);
 		return this;
@@ -520,8 +532,8 @@ public class Engine {
 	 * Engine.addFieldGetter(1, new IsMethodFieldGetter());
 	 * 
 	 * 注：IsMethodFieldGetter 系统已经提供，只是默认没有启用。该实现类通过调用
-	 *    target.isXxx() 方法获取 target.xxx 表达式的值，其中 xxx 字段必须是
-	 *    Boolean/boolean 类型
+	 *    target.isXxx() 方法获取 target.xxx 表达式的值，其中 isXxx() 返回值
+	 *    必须是 Boolean/boolean 类型才会被调用
 	 */
 	public static void addFieldGetter(int index, FieldGetter fieldGetter) {
 		FieldKit.addFieldGetter(index, fieldGetter);
