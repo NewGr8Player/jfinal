@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import com.jfinal.template.Engine;
 /**
  * JFinalConfig.
  * <p>
- * Config order: configConstant(), configRoute(), configEngine(), configPlugin(), configInterceptor(), configHandler()
+ * Config order: configConstant(), configPlugin(), configRoute(), configEngine(), configInterceptor(), configHandler()
  */
 public abstract class JFinalConfig {
 	
@@ -62,12 +62,12 @@ public abstract class JFinalConfig {
 	/**
 	 * Call back after JFinal start
 	 */
-	public void afterJFinalStart(){};
+	public void afterJFinalStart(){}
 	
 	/**
 	 * Call back before JFinal stop
 	 */
-	public void beforeJFinalStop(){};
+	public void beforeJFinalStop(){}
 	
 	protected Prop prop = null;
 	

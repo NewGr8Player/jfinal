@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,14 @@
 
 package com.jfinal.captcha;
 
+import java.io.Serializable;
+
 /**
  * 验证码
  */
-public class Captcha {
+public class Captcha implements Serializable {
+	
+	private static final long serialVersionUID = -2593323370708163022L;
 	
 	/**
 	 * 验证码默认过期时长 180 秒
@@ -59,6 +63,12 @@ public class Captcha {
 	
 	public Captcha(String key, String value) {
 		this(key, value, DEFAULT_EXPIRE_TIME);
+	}
+	
+	/**
+	 * redis 反序列化需要默认构造方法
+	 */
+	public Captcha() {
 	}
 	
 	public String getKey() {

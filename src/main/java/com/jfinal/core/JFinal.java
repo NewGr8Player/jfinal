@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,7 +78,12 @@ public final class JFinal {
 	}
 	
 	private void initHandler() {
-		Handler actionHandler = new ActionHandler(actionMapping, constants);
+		ActionHandler actionHandler = Config.getHandlers().getActionHandler();
+		if (actionHandler == null) {
+			actionHandler = new ActionHandler();
+		}
+		
+		actionHandler.init(actionMapping, constants);
 		handler = HandlerFactory.getHandler(Config.getHandlers().getHandlerList(), actionHandler);
 	}
 	
@@ -96,7 +101,7 @@ public final class JFinal {
 	}
 	
 	private void initActionMapping() {
-		actionMapping = new ActionMapping(Config.getRoutes(), Config.getInterceptors());
+		actionMapping = new ActionMapping(Config.getRoutes());
 		actionMapping.buildActionMapping();
 		Config.getRoutes().clear();
 	}
@@ -150,7 +155,7 @@ public final class JFinal {
 	}
 	
 	/**
-	 * 用于在 Eclipse 中，通过创建 main 方法的方式启动项目，支持执加载
+	 * 用于在 Eclipse 中，通过创建 main 方法的方式启动项目，支持热加载
 	 */
 	public static void start(String webAppDir, int port, String context, int scanIntervalSeconds) {
 		server = ServerFactory.getServer(webAppDir, port, context, scanIntervalSeconds);

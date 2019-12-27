@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import com.jfinal.captcha.CaptchaManager;
 import com.jfinal.captcha.ICaptchaCache;
 import com.jfinal.core.ActionReporter;
 import com.jfinal.core.Const;
+import com.jfinal.core.ControllerFactory;
 import com.jfinal.i18n.I18n;
 import com.jfinal.json.IJsonFactory;
 import com.jfinal.json.JsonManager;
@@ -50,6 +51,9 @@ final public class Constants {
 	private int maxPostSize = Const.DEFAULT_MAX_POST_SIZE;
 	private int freeMarkerTemplateUpdateDelay = Const.DEFAULT_FREEMARKER_TEMPLATE_UPDATE_DELAY;	// just for not devMode
 	
+	private ControllerFactory controllerFactory = Const.DEFAULT_CONTROLLER_FACTORY;
+	private int configPluginOrder = Const.DEFAULT_CONFIG_PLUGIN_ORDER;
+	
 	private ITokenCache tokenCache = null;
 	
 	/**
@@ -62,6 +66,27 @@ final public class Constants {
 	
 	public boolean getDevMode() {
 		return devMode;
+	}
+	
+	/**
+	 * 配置 configPlugin(Plugins me) 在 JFinalConfig 中被调用的次序.
+	 * 
+	 * 取值 1、2、3、4、5 分别表示在 configConstant(..)、configRoute(..)、
+	 * configEngine(..)、configInterceptor(..)、configHandler(...)
+	 * 之后被调用
+	 * 
+	 * 默认值为 2，那么 configPlugin(..) 将在 configRoute(...) 调用之后被调用
+	 * @param 取值只能是 1、2、3、4、5
+	 */
+	public void setConfigPluginOrder(int configPluginOrder) {
+		if (configPluginOrder < 1 || configPluginOrder > 5) {
+			throw new IllegalArgumentException("configPluginOrder 只能取值为：1、2、3、4、5");
+		}
+		this.configPluginOrder = configPluginOrder;
+	}
+	
+	public int getConfigPluginOrder() {
+		return configPluginOrder;
 	}
 	
 	/**
@@ -111,11 +136,25 @@ final public class Constants {
 	 * @param encoding the encoding
 	 */
 	public void setEncoding(String encoding) {
+		if (StrKit.isBlank(encoding)) {
+			throw new IllegalArgumentException("encoding can not be blank.");
+		}
 		this.encoding = encoding;
 	}
 	
 	public String getEncoding() {
 		return encoding;
+	}
+	
+	public void setControllerFactory(ControllerFactory controllerFactory) {
+		if (controllerFactory == null) {
+			throw new IllegalArgumentException("controllerFactory can not be null.");
+		}
+		this.controllerFactory = controllerFactory;
+	}
+	
+	public ControllerFactory getControllerFactory() {
+		return controllerFactory;
 	}
 	
 	/**

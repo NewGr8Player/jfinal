@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package com.jfinal.template.ext.directive;
 
-import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 import com.jfinal.template.Directive;
@@ -25,6 +24,7 @@ import com.jfinal.template.Env;
 import com.jfinal.template.TemplateException;
 import com.jfinal.template.expr.ast.Assign;
 import com.jfinal.template.expr.ast.ExprList;
+import com.jfinal.template.io.Writer;
 import com.jfinal.template.source.ISource;
 import com.jfinal.template.stat.Ctrl;
 import com.jfinal.template.stat.ParseException;
@@ -33,6 +33,7 @@ import com.jfinal.template.stat.Scope;
 import com.jfinal.template.stat.ast.Define;
 import com.jfinal.template.stat.ast.Include;
 import com.jfinal.template.stat.ast.Stat;
+import com.jfinal.template.stat.ast.StatList;
 
 /**
  * #render 指令用于动态渲染子模板，作为 include 指令的补充
@@ -69,7 +70,7 @@ public class RenderDirective extends Directive {
 		if (len > 1) {
 			for (int i = 1; i < len; i++) {
 				if (!(exprList.getExpr(i) instanceof Assign)) {
-					throw new ParseException("The " + i + "th parameter of #render directive must be an assignment expression", location);
+					throw new ParseException("The " + (i + 1) + "th parameter of #render directive must be an assignment expression", location);
 				}
 			}
 		}
@@ -111,7 +112,7 @@ public class RenderDirective extends Directive {
 		if (statInfo == null) {
 			statInfo = parseStatInfo(env, subFileName);
 			statInfoCache.put(subFileName, statInfo);
-		} else if (env.getEngineConfig().isDevMode()) {
+		} else if (env.isDevMode()) {
 			// statInfo.env.isSourceListModified() 逻辑可以支持 #render 子模板中的 #include 过来的子模板在 devMode 下在修改后可被重加载
 			if (statInfo.source.isModified() || statInfo.env.isSourceListModified()) {
 				statInfo = parseStatInfo(env, subFileName);
@@ -130,8 +131,8 @@ public class RenderDirective extends Directive {
 		
 		try {
 			EnvSub envSub = new EnvSub(env);
-			Stat stat = new Parser(envSub, fileSource.getContent(), subFileName).parse();
-			return new StatInfo(envSub, stat, fileSource);
+			StatList statList = new Parser(envSub, fileSource.getContent(), subFileName).parse();
+			return new StatInfo(envSub, statList.getActualStat(), fileSource);
 		} catch (Exception e) {
 			throw new ParseException(e.getMessage(), location, e);
 		}

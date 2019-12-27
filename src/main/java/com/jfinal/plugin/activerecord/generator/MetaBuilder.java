@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -226,23 +226,41 @@ public class MetaBuilder {
 			ColumnMeta cm = new ColumnMeta();
 			cm.name = rsmd.getColumnName(i);
 			
-			String colClassName = rsmd.getColumnClassName(i);
-			String typeStr = typeMapping.getType(colClassName);
-			if (typeStr != null) {
-				cm.javaType = typeStr;
-			}
-			else {
+			String typeStr = null;
+			if (dialect.isKeepByteAndShort()) {
 				int type = rsmd.getColumnType(i);
-				if (type == Types.BINARY || type == Types.VARBINARY || type == Types.BLOB) {
-					cm.javaType = "byte[]";
-				}
-				else if (type == Types.CLOB || type == Types.NCLOB) {
-					cm.javaType = "java.lang.String";
-				}
-				else {
-					cm.javaType = "java.lang.String";
+				if (type == Types.TINYINT) {
+					typeStr = "java.lang.Byte";
+				} else if (type == Types.SMALLINT) {
+					typeStr = "java.lang.Short";
 				}
 			}
+			
+			if (typeStr == null) {
+				String colClassName = rsmd.getColumnClassName(i);
+				typeStr = typeMapping.getType(colClassName);
+			}
+			
+			if (typeStr == null) {
+				int type = rsmd.getColumnType(i);
+				if (type == Types.BINARY || type == Types.VARBINARY || type == Types.LONGVARBINARY || type == Types.BLOB) {
+					typeStr = "byte[]";
+				} else if (type == Types.CLOB || type == Types.NCLOB) {
+					typeStr = "java.lang.String";
+				}
+				// 支持 oracle 的 TIMESTAMP、DATE 字段类型，其中 Types.DATE 值并不会出现
+				// 保留对 Types.DATE 的判断，一是为了逻辑上的正确性、完备性，二是其它类型的数据库可能用得着
+				else if (type == Types.TIMESTAMP || type == Types.DATE) {
+					typeStr = "java.util.Date";
+				}
+				// 支持 PostgreSql 的 jsonb json
+				else if (type == Types.OTHER) {
+					typeStr = "java.lang.Object";
+				} else {
+					typeStr = "java.lang.String";
+				}
+			}
+			cm.javaType = typeStr;
 			
 			// 构造字段对应的属性名 attrName
 			cm.attrName = buildAttrName(cm.name);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,21 @@ import java.security.MessageDigest;
 
 public class HashKit {
 	
+	public static final long FNV_OFFSET_BASIS_64 = 0xcbf29ce484222325L;
+	public static final long FNV_PRIME_64 = 0x100000001b3L;
+	
 	private static final java.security.SecureRandom random = new java.security.SecureRandom();
 	private static final char[] HEX_DIGITS = "0123456789abcdef".toCharArray();
 	private static final char[] CHAR_ARRAY = "_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+	
+	public static long fnv1a64(String key) {
+		long hash = FNV_OFFSET_BASIS_64;
+		for(int i=0, size=key.length(); i<size; i++) {
+			hash ^= key.charAt(i);
+			hash *= FNV_PRIME_64;
+		}
+		return hash;
+	}
 	
 	public static String md5(String srcStr){
 		return hash("MD5", srcStr);

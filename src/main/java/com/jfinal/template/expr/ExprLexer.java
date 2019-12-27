@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -329,7 +329,7 @@ class ExprLexer {
 				radix = 16;						// 16 进制
 				c = next();
 				numStart = numStart + 2;
-			} else {
+			} else if (c != '.') {
 				radix = 8;						// 8 进制
 				// numStart = numStart + 1;		// 8 进制不用去掉前缀 0，可被正确转换，去除此行便于正确处理数字 0
 			}

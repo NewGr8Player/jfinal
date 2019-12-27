@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,11 +32,18 @@ import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.activerecord.RecordBuilder;
 import com.jfinal.plugin.activerecord.Table;
+import com.jfinal.plugin.activerecord.builder.KeepByteAndShortModelBuilder;
+import com.jfinal.plugin.activerecord.builder.KeepByteAndShortRecordBuilder;
 
 /**
  * Dialect.
  */
 public abstract class Dialect {
+	
+	// 指示 Generator、ModelBuilder、RecordBuilder 是否保持住 Byte、Short 类型
+	protected boolean keepByteAndShort = false;
+	protected ModelBuilder modelBuilder = ModelBuilder.me;
+	protected RecordBuilder recordBuilder = RecordBuilder.me;
 	
 	// Methods for common
 	public abstract String forTableBuilderDoBuild(String tableName);
@@ -55,26 +62,76 @@ public abstract class Dialect {
 	public abstract void forDbUpdate(String tableName, String[] pKeys, Object[] ids, Record record, StringBuilder sql, List<Object> paras);
 	
 	/**
-	 * 覆盖此方法，可以对 JDBC 到 java 数据类型进行定制化转换
+	 * 指示 Generator、ModelBuilder、RecordBuilder 是否保持住 Byte、Short 类型
+	 */
+	public Dialect setKeepByteAndShort(boolean keepByteAndShort) {
+		this.keepByteAndShort = keepByteAndShort;
+		/**
+		 * 内部的 4 个 if 判断是为了避免替换掉用户通过 setModelBuilder(...)
+		 * setRecordBuilder(...) 配置的自定义 builder
+		 */
+		if (keepByteAndShort) {
+			if (modelBuilder.getClass() == ModelBuilder.class) {
+				modelBuilder = KeepByteAndShortModelBuilder.me;
+			}
+			if (recordBuilder.getClass() == RecordBuilder.class) {
+				recordBuilder = KeepByteAndShortRecordBuilder.me;
+			}
+		} else {
+			if (modelBuilder.getClass() == KeepByteAndShortModelBuilder.class) {
+				modelBuilder = ModelBuilder.me;
+			}
+			if (recordBuilder.getClass() == KeepByteAndShortRecordBuilder.class) {
+				recordBuilder = RecordBuilder.me;
+			}
+		}
+		return this;
+	}
+	
+	/**
+	 * 指示 MetaBuilder 生成的 ColumnMeta.javaType 是否保持住 Byte、Short 类型
+	 * 进而 BaseModelBuilder 生成针对 Byte、Short 类型的获取方法： 
+	 * getByte(String)、getShort(String)
+	 */
+	public boolean isKeepByteAndShort() {
+		return keepByteAndShort;
+	}
+	
+	/**
+	 * 配置自定义 ModelBuilder
+	 * 
+	 * 通过继承扩展 ModelBuilder 可以对 JDBC 到 java 数据类型进行定制化转换
 	 * 不同数据库从 JDBC 到 java 数据类型的映射关系有所不同
 	 * 
 	 * 此外，还可以通过改变 ModelBuilder.buildLabelNamesAndTypes()
 	 * 方法逻辑，实现下划线字段名转驼峰变量名的功能
 	 */
-	@SuppressWarnings("rawtypes")
-	public <T> List<T> buildModelList(ResultSet rs, Class<? extends Model> modelClass) throws SQLException, InstantiationException, IllegalAccessException {
-		return ModelBuilder.me.build(rs, modelClass);
+	public Dialect setModelBuilder(ModelBuilder modelBuilder) {
+		this.modelBuilder = modelBuilder;
+		return this;
 	}
 	
 	/**
-	 * 覆盖此方法，可以对 JDBC 到 java 数据类型进行定制化转换
+	 * 配置自定义 RecordBuilder
+	 * 
+	 * 通过继承扩展 RecordBuilder 可以对 JDBC 到 java 数据类型进行定制化转换
 	 * 不同数据库从 JDBC 到 java 数据类型的映射关系有所不同
 	 * 
 	 * 此外，还可以通过改变 RecordBuilder.buildLabelNamesAndTypes()
 	 * 方法逻辑，实现下划线字段名转驼峰变量名的功能
 	 */
+	public Dialect setRecordBuilder(RecordBuilder recordBuilder) {
+		this.recordBuilder = recordBuilder;
+		return this;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public <T> List<T> buildModelList(ResultSet rs, Class<? extends Model> modelClass) throws SQLException, InstantiationException, IllegalAccessException {
+		return modelBuilder.build(rs, modelClass);
+	}
+	
 	public List<Record> buildRecordList(Config config, ResultSet rs) throws SQLException {
-		return RecordBuilder.me.build(config, rs);
+		return recordBuilder.build(config, rs);
 	}
 	
 	/**
@@ -215,10 +272,16 @@ public abstract class Dialect {
 	protected void fillStatementHandleDateType(PreparedStatement pst, List<Object> paras) throws SQLException {
 		for (int i=0, size=paras.size(); i<size; i++) {
 			Object value = paras.get(i);
-			if (value instanceof java.sql.Date) {
-				pst.setDate(i + 1, (java.sql.Date)value);
-			} else if (value instanceof java.sql.Timestamp) {
-				pst.setTimestamp(i + 1, (java.sql.Timestamp)value);
+			if (value instanceof java.util.Date) {
+				if (value instanceof java.sql.Date) {
+					pst.setDate(i + 1, (java.sql.Date)value);
+				} else if (value instanceof java.sql.Timestamp) {
+					pst.setTimestamp(i + 1, (java.sql.Timestamp)value);
+				} else {
+					// Oracle、SqlServer 中的 TIMESTAMP、DATE 支持 new Date() 给值
+					java.util.Date d = (java.util.Date)value;
+					pst.setTimestamp(i + 1, new java.sql.Timestamp(d.getTime()));
+				}
 			} else {
 				pst.setObject(i + 1, value);
 			}
@@ -231,10 +294,16 @@ public abstract class Dialect {
 	protected void fillStatementHandleDateType(PreparedStatement pst, Object... paras) throws SQLException {
 		for (int i=0; i<paras.length; i++) {
 			Object value = paras[i];
-			if (value instanceof java.sql.Date) {
-				pst.setDate(i + 1, (java.sql.Date)value);
-			} else if (value instanceof java.sql.Timestamp) {
-				pst.setTimestamp(i + 1, (java.sql.Timestamp)value);
+			if (value instanceof java.util.Date) {
+				if (value instanceof java.sql.Date) {
+					pst.setDate(i + 1, (java.sql.Date)value);
+				} else if (value instanceof java.sql.Timestamp) {
+					pst.setTimestamp(i + 1, (java.sql.Timestamp)value);
+				} else {
+					// Oracle、SqlServer 中的 TIMESTAMP、DATE 支持 new Date() 给值
+					java.util.Date d = (java.util.Date)value;
+					pst.setTimestamp(i + 1, new java.sql.Timestamp(d.getTime()));
+				}
 			} else {
 				pst.setObject(i + 1, value);
 			}

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -90,8 +90,19 @@ public class Scope {
 	 */
 	public Object get(Object key) {
 		for (Scope cur=this; cur!=null; cur=cur.parent) {
-			if (cur.data != null && cur.data.containsKey(key)) {
-				return cur.data.get(key);
+//			if (cur.data != null && cur.data.containsKey(key)) {
+//				return cur.data.get(key);
+//			}
+			
+			if (cur.data != null) {
+				Object ret = cur.data.get(key);
+				if (ret != null) {
+					return ret;
+				}
+				
+				if (cur.data.containsKey(key)) {
+					return null;
+				}
 			}
 		}
 		// return null;
@@ -228,6 +239,18 @@ public class Scope {
 				return ;
 			}
 		}
+	}
+	
+	/**
+	 * 自内向外在作用域栈中查找变量是否存在
+	 */
+	public boolean exists(Object key) {
+		for (Scope cur=this; cur!=null; cur=cur.parent) {
+			if (cur.data != null && cur.data.containsKey(key)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
 

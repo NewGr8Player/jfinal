@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,19 +48,54 @@ import com.jfinal.upload.UploadFile;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public abstract class Controller {
 	
+	private Action action;
+	
 	private HttpServletRequest request;
 	private HttpServletResponse response;
 	
 	private String urlPara;
 	private String[] urlParaArray;
+	private String rawData;
+	
+	private Render render;
+	
+	private static final RenderManager renderManager = RenderManager.me();
 	
 	private static final String[] NULL_URL_PARA_ARRAY = new String[0];
 	private static final String URL_PARA_SEPARATOR = Config.getConstants().getUrlParaSeparator();
 	
-	void init(HttpServletRequest request, HttpServletResponse response, String urlPara) {
+	void init(Action action, HttpServletRequest request, HttpServletResponse response, String urlPara) {
+		this.action = action;
 		this.request = request;
 		this.response = response;
 		this.urlPara = urlPara;
+		urlParaArray = null;
+		render = null;
+	}
+	
+	void clear() {
+		action = null;
+		request = null;
+		response = null;
+		urlPara = null;
+		urlParaArray = null;
+		render = null;
+		rawData = null;
+	}
+	
+	public String getRawData() {
+		if (rawData == null) {
+			rawData = com.jfinal.kit.HttpKit.readData(request);
+		}
+		return rawData;
+	}
+	
+	public String getControllerKey() {
+		return action.getControllerKey();
+	}
+	
+	public String getViewPath() {
+		return action.getViewPath();
 	}
 	
 	public void setHttpServletRequest(HttpServletRequest request) {
@@ -170,21 +205,25 @@ public abstract class Controller {
 	 */
 	public Integer[] getParaValuesToInt(String name) {
 		String[] values = request.getParameterValues(name);
-		if (values == null)
+		if (values == null || values.length == 0) {
 			return null;
+		}
 		Integer[] result = new Integer[values.length];
-		for (int i=0; i<result.length; i++)
-			result[i] = Integer.parseInt(values[i]);
+		for (int i=0; i<result.length; i++) {
+			result[i] = StrKit.isBlank(values[i]) ? null : Integer.parseInt(values[i]);
+		}
 		return result;
 	}
 	
 	public Long[] getParaValuesToLong(String name) {
 		String[] values = request.getParameterValues(name);
-		if (values == null)
+		if (values == null || values.length == 0) {
 			return null;
+		}
 		Long[] result = new Long[values.length];
-		for (int i=0; i<result.length; i++)
-			result[i] = Long.parseLong(values[i]);
+		for (int i=0; i<result.length; i++) {
+			result[i] = StrKit.isBlank(values[i]) ? null : Long.parseLong(values[i]);
+		}
 		return result;
 	}
 	
@@ -204,6 +243,11 @@ public abstract class Controller {
 	 */
 	public <T> T getAttr(String name) {
 		return (T)request.getAttribute(name);
+	}
+	
+	public <T> T getAttr(String name, T defaultValue) {
+		T result = (T)request.getAttribute(name);
+		return result != null ? result : defaultValue;
 	}
 	
 	/**
@@ -416,6 +460,11 @@ public abstract class Controller {
 	public <T> T getSessionAttr(String key) {
 		HttpSession session = request.getSession(false);
 		return session != null ? (T)session.getAttribute(key) : null;
+	}
+	
+	public <T> T getSessionAttr(String key, T defaultValue) {
+		T result = getSessionAttr(key);
+		return result != null ? result : defaultValue;
 	}
 	
 	/**
@@ -949,12 +998,6 @@ public abstract class Controller {
 	
 	// ----------------
 	// render below ---
-	private static final RenderManager renderManager = RenderManager.me();
-	
-	/**
-	 * Hold Render object when invoke renderXxx(...)
-	 */
-	private Render render;
 	
 	public Render getRender() {
 		return render;
@@ -980,6 +1023,9 @@ public abstract class Controller {
 	 * 2: Generate email, short message and so on
 	 */
 	public String renderToString(String template, Map data) {
+		if (template.charAt(0) != '/') {
+			template = action.getViewPath() + template;
+		}
 		return renderManager.getEngine().getTemplate(template).renderToString(data);
 	}
 	

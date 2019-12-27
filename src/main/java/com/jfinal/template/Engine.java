@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,11 @@ import java.util.Map;
 import com.jfinal.kit.HashKit;
 import com.jfinal.kit.StrKit;
 import com.jfinal.template.expr.ast.MethodKit;
+import com.jfinal.template.source.ClassPathSourceFactory;
 import com.jfinal.template.source.ISource;
 import com.jfinal.template.source.ISourceFactory;
 import com.jfinal.template.source.StringSource;
+import com.jfinal.template.stat.OutputDirectiveFactory;
 import com.jfinal.template.stat.Parser;
 import com.jfinal.template.stat.ast.Stat;
 
@@ -161,6 +163,13 @@ public class Engine {
 	
 	/**
 	 * Get template by string content and do not cache the template
+	 */
+	public Template getTemplateByString(String content) {
+		return getTemplateByString(content, false);
+	}
+	
+	/**
+	 * Get template by string content
 	 * 
 	 * 重要：StringSource 中的 key = HashKit.md5(content)，也即 key
 	 *     与 content 有紧密的对应关系，当 content 发生变化时 key 值也相应变化
@@ -169,13 +178,7 @@ public class Engine {
 	 *     
 	 *     当 getTemplateByString(String, boolean) 中的 String 参数的
 	 *     数量可控并且确定时，才可对其使用缓存 
-	 */
-	public Template getTemplateByString(String content) {
-		return getTemplateByString(content, false);
-	}
-	
-	/**
-	 * Get template by string content
+	 *     
 	 * @param content 模板内容
 	 * @param cache true 则缓存 Template，否则不缓存
 	 */
@@ -274,17 +277,29 @@ public class Engine {
 	/**
 	 * Set output directive factory
 	 */
-	public Engine setOutputDirectiveFactory(IOutputDirectiveFactory outputDirectiveFactory) {
+	public Engine setOutputDirectiveFactory(OutputDirectiveFactory outputDirectiveFactory) {
 		config.setOutputDirectiveFactory(outputDirectiveFactory);
 		return this;
 	}
 	
 	/**
 	 * Add directive
+	 * <pre>
+	 * 示例：
+	 * addDirective("now", NowDirective.class)
+	 * </pre>
 	 */
-	public Engine addDirective(String directiveName, Directive directive) {
-		config.addDirective(directiveName, directive);
+	public Engine addDirective(String directiveName, Class<? extends Directive> directiveClass) {
+		config.addDirective(directiveName, directiveClass);
 		return this;
+	}
+	
+	/**
+	 * 该方法已被 addDirective(String, Class<? extends Directive>) 所代替
+	 */
+	@Deprecated
+	public Engine addDirective(String directiveName, Directive directive) {
+		return addDirective(directiveName, directive.getClass());
 	}
 	
 	/**
@@ -414,6 +429,13 @@ public class Engine {
 		return this;
 	}
 	
+	/**
+	 * 设置为 ClassPathSourceFactory 的快捷方法
+	 */
+	public Engine setToClassPathSourceFactory() {
+		return setSourceFactory(new ClassPathSourceFactory());
+	}
+	
 	public ISourceFactory getSourceFactory() {
 		return sourceFactory;
 	}
@@ -445,6 +467,11 @@ public class Engine {
 		return config.getEncoding();
 	}
 	
+	public Engine setWriterBufferSize(int bufferSize) {
+		config.setWriterBufferSize(bufferSize);
+		return this;
+	}
+	
 	/**
 	 * Engine 独立设置为 devMode 可以方便模板文件在修改后立即生效，
 	 * 但如果在 devMode 之下并不希望对 addSharedFunction(...)，
@@ -466,7 +493,7 @@ public class Engine {
 	}
 	
 	public static void removeExtensionMethod(Class<?> targetClass, Object objectOfExtensionClass) {
-		MethodKit.removeExtensionMethod(targetClass, objectOfExtensionClass);;
+		MethodKit.removeExtensionMethod(targetClass, objectOfExtensionClass);
 	}
 	
 	public static void removeExtensionMethod(Class<?> targetClass, Class<?> extensionClass) {

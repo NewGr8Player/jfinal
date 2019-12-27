@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,16 +45,19 @@ public class RecordBuilder {
 			Map<String, Object> columns = record.getColumns();
 			for (int i=1; i<=columnCount; i++) {
 				Object value;
-				if (types[i] < Types.BLOB)
+				if (types[i] < Types.BLOB) {
 					value = rs.getObject(i);
-				else if (types[i] == Types.CLOB)
-					value = ModelBuilder.me.handleClob(rs.getClob(i));
-				else if (types[i] == Types.NCLOB)
-					value = ModelBuilder.me.handleClob(rs.getNClob(i));
-				else if (types[i] == Types.BLOB)
-					value = ModelBuilder.me.handleBlob(rs.getBlob(i));
-				else
-					value = rs.getObject(i);
+				} else {
+					if (types[i] == Types.CLOB) {
+						value = ModelBuilder.me.handleClob(rs.getClob(i));
+					} else if (types[i] == Types.NCLOB) {
+						value = ModelBuilder.me.handleClob(rs.getNClob(i));
+					} else if (types[i] == Types.BLOB) {
+						value = ModelBuilder.me.handleBlob(rs.getBlob(i));
+					} else {
+						value = rs.getObject(i);
+					}
+				}
 				
 				columns.put(labelNames[i], value);
 			}

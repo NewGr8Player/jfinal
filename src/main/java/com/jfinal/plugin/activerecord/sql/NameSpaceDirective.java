@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 
 package com.jfinal.plugin.activerecord.sql;
 
-import java.io.Writer;
 import com.jfinal.template.Directive;
 import com.jfinal.template.Env;
 import com.jfinal.template.TemplateException;
 import com.jfinal.template.expr.ast.Const;
 import com.jfinal.template.expr.ast.Expr;
 import com.jfinal.template.expr.ast.ExprList;
+import com.jfinal.template.io.Writer;
 import com.jfinal.template.stat.ParseException;
 import com.jfinal.template.stat.Scope;
 

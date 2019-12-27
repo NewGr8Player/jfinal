@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.jfinal.plugin.activerecord;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +24,9 @@ import java.util.List;
  * SqlPara
  * 封装查询使用的 sql 与参数，主要用于 getSqlPara(...) 返回值
  */
-public class SqlPara {
+public class SqlPara implements Serializable {
+	
+	private static final long serialVersionUID = -8586448059592782381L;
 	
 	String sql;
 	List<Object> paraList;

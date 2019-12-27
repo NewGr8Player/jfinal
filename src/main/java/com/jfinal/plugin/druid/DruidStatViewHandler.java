@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2017, James Zhan 詹波 (jfinal@126.com).
+ * Copyright (c) 2011-2019, James Zhan 詹波 (jfinal@126.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,12 @@ public class DruidStatViewHandler extends Handler {
 	public void handle(String target, HttpServletRequest request, HttpServletResponse response, boolean[] isHandled) {
 		if (target.startsWith(visitPath)) {
 			isHandled[0] = true;
+			
+			// 支持 context path
+			String ctx = request.getContextPath();
+			if (ctx != null && !"".equals(ctx) && !"/".equals(ctx)) {
+				target = ctx + target;
+			}
 			
 			if (target.equals(visitPath) && !target.endsWith("/index.html")) {
 				HandlerKit.redirect(target += "/index.html", request, response, isHandled);
