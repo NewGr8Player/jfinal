@@ -37,7 +37,10 @@ public class TextRender extends Render {
 	
 	public TextRender(String text, String contentType) {
 		this.text = text;
-		this.contentType = contentType;
+		
+		// 支持简洁写法，例如：xml、js
+		ContentType ct = ContentType.parse(contentType);
+		this.contentType = (ct != null ? ct.value() : contentType);
 	}
 	
 	public TextRender(String text, ContentType contentType) {
@@ -48,12 +51,17 @@ public class TextRender extends Render {
 	public void render() {
 		PrintWriter writer = null;
 		try {
-			response.setHeader("Pragma", "no-cache");	// HTTP/1.0 caches might not implement Cache-Control and might only implement Pragma: no-cache
-			response.setHeader("Cache-Control", "no-cache");
-			response.setDateHeader("Expires", 0);
+			// response.setHeader("Cache-Control", "no-cache");
 			
-			response.setContentType(contentType);
-			response.setCharacterEncoding(getEncoding());	// 与 contentType 分开设置
+			
+			String ct = getContentType();
+			response.setContentType(ct);
+			
+			// 不包含 "charset" 时才调用该方法，否则该方法会覆盖掉 contentType 中的 "charset" 部分
+			if (ct.indexOf("charset") == -1) {
+				response.setCharacterEncoding(getEncoding());	// 与 contentType 分开设置
+			}
+			
 			
 			writer = response.getWriter();
 			writer.write(text);

@@ -25,13 +25,21 @@ import java.lang.annotation.Target;
 @Target({ElementType.PARAMETER})
 @Documented
 public @interface Para {
+	
+	/**
+	 * 不能使用空字符串：
+	 * 1: 对于 value() 早已用于无 modelName 前缀的场景：action(@Para("")User user)
+	 * 2: 对于 defaultValue() 可用于指定默认值为空字符串：action(@Para(defaultValue = "")String email)
+	 */
+	String NULL_VALUE = "-NULL VALUE-";
+	
     /**
      * 对应到 HTTP 参数里的参数名称
      */
-    String value();
+    String value() default NULL_VALUE;
     
     /**
      * 默认值
      */
-    String defaultValue() default "";
+    String defaultValue() default NULL_VALUE;
 }

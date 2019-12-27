@@ -27,7 +27,6 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import com.jfinal.aop.Enhancer;
 import com.jfinal.core.converter.TypeConverter;
 import com.jfinal.kit.Kv;
 import com.jfinal.kit.StrKit;
@@ -165,7 +164,9 @@ public abstract class Controller {
 	 * @return a String representing the single value of the parameter
 	 */
 	public String getPara(String name) {
-		return request.getParameter(name);
+		// return request.getParameter(name);
+		String result = request.getParameter(name);
+		return "".equals(result) ? null : result;
 	}
 	
 	/**
@@ -406,7 +407,10 @@ public abstract class Controller {
 		try {
 			if (StrKit.isBlank(value))
 				return defaultValue;
-			return new java.text.SimpleDateFormat("yyyy-MM-dd").parse(value.trim());
+			
+			// return new java.text.SimpleDateFormat("yyyy-MM-dd").parse(value.trim());
+			return (Date)TypeConverter.me().convert(Date.class, value);
+			
 		} catch (Exception e) {
 			throw new ActionException(400, renderManager.getRenderFactory().getErrorRender(400),  "Can not parse the parameter \"" + value + "\" to Date value.");
 		}
@@ -1141,9 +1145,15 @@ public abstract class Controller {
 	}
 	
 	/**
-	 * Render with text and content type.
-	 * <p>
-	 * Example: renderText("&lt;user id='5888'&gt;James&lt;/user&gt;", "application/xml");
+	 * 响应 text 文本并指定 content type，例如: "text/xml"、"application/javascript"
+	 * 
+	 * 其中 "text/xml"、"application/javascript"、"application/json"、"text/html"
+	 * 从 jfinal 4.6 版本开始可以简写为 "xml"、"js"、"json"、"html"
+	 * 
+	 * <pre>
+	 * 例子：
+	 *    renderText("&lt;user id='5888'&gt;James&lt;/user&gt;", "xml");
+	 * </pre>
 	 */
 	public void renderText(String text, String contentType) {
 		render = renderManager.getRenderFactory().getTextRender(text, contentType);
@@ -1272,7 +1282,7 @@ public abstract class Controller {
 	}
 	
 	/**
-	 * Render with xml view using freemarker.
+	 * Render with xml view using enjoy template.
 	 */
 	public void renderXml(String view) {
 		render = renderManager.getRenderFactory().getXmlRender(view);
@@ -1324,7 +1334,7 @@ public abstract class Controller {
 	
 	// ---------
 	
-	/**
+	/*
 	 * 获取 Aop 代理对象，便于在 action 方法内部调用，可以取代 @Inject 注入
 	 * 
 	 * <pre>
@@ -1339,20 +1349,10 @@ public abstract class Controller {
 	 *    service.justDoIt();
 	 * }
 	 * </pre>
-	 */
+	
 	public <T> T getAopProxy(Class<T> targetClass) {
 		return com.jfinal.aop.Aop.get(targetClass);
-	}
-	
-	/**
-	 * 该功能已被 getAopProxy(...)、@Inject 注入以及 Aop.get(...) 完全取代，不建议使用
-	 */
-	@Deprecated
-	public <T> T enhance(Class<T> targetClass) {
-		return (T)Enhancer.enhance(targetClass);
-	}
-	
-	
+	} */
 	
 	// --------------------
 	

@@ -94,18 +94,28 @@ public class ParaProcessorBuilder {
 		if(!p.isNamePresent()) {
 			log.warn("You should config compiler argument \"-parameters\" for parameter injection of action : " +
 					controllerClass.getName() + "." + method.getName() + "(...) \n" +
-					"Visit http://www.jfinal.com/doc/3-3 for details \n");
+					"Visit https://jfinal.com/doc/3-3 for details \n");
 		}
 		String parameterName = p.getName();
 		String defaultValue = null;
 		Class<?> typeClass = p.getType();
 		Para para = p.getAnnotation(Para.class);
 		if (para != null) {
-			parameterName = para.value().trim();
+			// 支持 @Para 注解仅指定 defaultValue 值的用法
+			if (!Para.NULL_VALUE.equals(para.value())) {
+				parameterName = para.value().trim();
+			}
+			
+			/*
 			defaultValue = para.defaultValue().trim();
 			if (defaultValue.isEmpty()) {
 				defaultValue = null;
+			}*/
+			// 空字符串 "" 可以成为默认值，空白字符串与前后有空白字符的文本也可以成为默认值: "  "、" ABC "
+			if (!Para.NULL_VALUE.equals(para.defaultValue())) {
+				defaultValue = para.defaultValue();
 			}
+			
 		}
 		Holder holder = typeMap.get(typeClass.getName());
 		if (holder != null) {

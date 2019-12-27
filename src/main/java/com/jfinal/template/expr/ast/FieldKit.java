@@ -44,10 +44,13 @@ public class FieldKit {
 		LinkedList<FieldGetter> ret = new LinkedList<FieldGetter>();
 		
 		ret.addLast(new GetterMethodFieldGetter(null));
+		ret.addLast(new RealFieldGetter(null));
 		ret.addLast(new ModelFieldGetter());
 		ret.addLast(new RecordFieldGetter());
 		ret.addLast(new MapFieldGetter());
-		ret.addLast(new RealFieldGetter(null));
+		
+		// 挪到第二的位置，addSharedObject(..., modelObj) 用法可以获取到 model 中的 public 属性
+		// ret.addLast(new RealFieldGetter(null));
 		ret.addLast(new ArrayLengthGetter());
 		// ret.addLast(new IsMethodFieldGetter());
 		
@@ -136,6 +139,36 @@ public class FieldKit {
 	
 	public static void clearCache() {
 		fieldGetterCache.clear();
+	}
+	
+	/**
+	 * 设置极速模式
+	 * 
+	 * 极速模式将生成代理对象来消除 java.lang.reflect.Method.invoke(...) 调用，
+	 * 性能提升 12.9%
+	 */
+	public static synchronized void setFastMode(boolean fastMode) {
+		if (fastMode) {
+			if ( !contains(FastFieldGetter.class) ) {
+				addFieldGetterToFirst(new FastFieldGetter());
+			}
+		} else {
+			if (contains(FastFieldGetter.class)) {
+				removeFieldGetter(FastFieldGetter.class);
+			}
+		}
+	}
+	
+	/**
+	 * 判断是否包含某个 FieldGetter
+	 */
+	public static boolean contains(Class<? extends FieldGetter> fieldGetterClass) {
+		for (FieldGetter fg : getters) {
+			if (fg.getClass() == fieldGetterClass) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
 

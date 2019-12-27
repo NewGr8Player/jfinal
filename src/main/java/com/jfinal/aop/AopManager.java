@@ -73,7 +73,7 @@ public class AopManager {
 	 * 示例：
 	 * // Service 类的构造方法中传入了两个参数
 	 * Service service = new Service(paraAaa, paraBbb);
-	 * AopManager.me().addSingletonObject(service);
+	 * AopManager.me().addSingletonObject(Service.class, service);
 	 * 
 	 * // 上面代码添加完成以后，可以在任何地方通过下面的方式获取单例对象 
 	 * service = Aop.get(Service.class);
@@ -85,9 +85,13 @@ public class AopManager {
 	 * // 在添加为单例对象之前还可以先为其注入依赖对象
 	 * Service service = new Service(paraAaa, paraBbb);
 	 * Aop.inject(service);		// 这里是对 Service 进行依赖注入
-	 * AopManager.me().addSingletonObject(service);
+	 * AopManager.me().addSingletonObject(Service.class, service);
 	 * </pre>
 	 */
+	public void addSingletonObject(Class<?> type, Object singletonObject) {
+		Aop.aopFactory.addSingletonObject(type, singletonObject);
+	}
+	
 	public void addSingletonObject(Object singletonObject) {
 		Aop.aopFactory.addSingletonObject(singletonObject);
 	}
@@ -172,18 +176,6 @@ public class AopManager {
 	
 	public AopFactory getAopFactory() {
 		return Aop.aopFactory;
-	}
-	
-	/**
-	 * 设置被注入的对象是否被增强，可使用 @Enhace(boolean) 覆盖此默认值
-	 * 
-	 * 后续的 jfinal 版本将考虑根据目标类是否配置了拦截器进行增强的新设计，
-	 * 可能会去除与 enhance 有关的配置与代码，所以与 enhance 有关的配置
-	 * 已被 @Deprecated，不建议使用
-	 */
-	@Deprecated
-	public void setEnhance(boolean enhance) {
-		Aop.aopFactory.setEnhance(enhance);
 	}
 	
 	/**

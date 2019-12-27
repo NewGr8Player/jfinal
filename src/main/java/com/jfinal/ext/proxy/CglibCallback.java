@@ -14,44 +14,26 @@
  * limitations under the License.
  */
 
-package com.jfinal.aop;
+package com.jfinal.ext.proxy;
 
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
+import com.jfinal.aop.Interceptor;
+import com.jfinal.aop.InterceptorManager;
+import com.jfinal.aop.Invocation;
+import com.jfinal.ext.proxy.CglibProxyFactory.IntersCache;
+import com.jfinal.ext.proxy.CglibProxyFactory.MethodKey;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
-import static com.jfinal.aop.InterceptorManager.NULL_INTERS;
 
 /**
- * Callback.
+ * CglibCallback.
  */
-class Callback implements MethodInterceptor {
-	
-	private final Interceptor[] injectInters;
+class CglibCallback implements MethodInterceptor {
 	
 	private static final Set<String> excludedMethodName = buildExcludedMethodName();
 	private static final InterceptorManager interMan = InterceptorManager.me();
-	
-	public Callback() {
-		this.injectInters = NULL_INTERS;
-	}
-	
-	public Callback(Interceptor... injectInters) {
-		checkInjectInterceptors(injectInters);
-		this.injectInters = injectInters;
-	}
-	
-	private void checkInjectInterceptors(Interceptor... injectInters) {
-		if (injectInters == null) {
-			throw new IllegalArgumentException("injectInters can not be null.");
-		}
-		for (Interceptor inter : injectInters) {
-			if (inter == null) {
-				throw new IllegalArgumentException("interceptor in injectInters can not be null.");
-			}
-		}
-	}
 	
 	public Object intercept(Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
 		if (excludedMethodName.contains(method.getName())) {
@@ -63,8 +45,21 @@ class Callback implements MethodInterceptor {
 			targetClass = targetClass.getSuperclass();
 		}
 		
-		Interceptor[] finalInters = interMan.buildServiceMethodInterceptor(injectInters, targetClass, method);
-		Invocation invocation = new Invocation(target, method, args, methodProxy, finalInters);
+		
+		MethodKey key = IntersCache.getMethodKey(targetClass, method);
+		Interceptor[] inters = IntersCache.get(key);
+		if (inters == null) {
+			inters = interMan.buildServiceMethodInterceptor(targetClass, method);
+			IntersCache.put(key, inters);
+		}
+		
+		Invocation invocation = new Invocation(target, method, inters,
+			x -> {
+				return methodProxy.invokeSuper(target, x);
+			}
+		, args);
+		
+		
 		invocation.invoke();
 		return invocation.getReturnValue();
 	}

@@ -35,13 +35,14 @@ import com.jfinal.log.Log;
  */
 public class JFinalFilter implements Filter {
 	
-	private Handler handler;
-	private String encoding;
-	private JFinalConfig jfinalConfig;
-	private Constants constants;
-	private static final JFinal jfinal = JFinal.me();
-	private static Log log;
-	private int contextPathLength;
+	protected JFinalConfig jfinalConfig;
+	protected int contextPathLength;
+	protected Constants constants;
+	protected String encoding;
+	protected Handler handler;
+	protected static Log log;
+	
+	protected static final JFinal jfinal = JFinal.me();
 	
 	public JFinalFilter() {
 		this.jfinalConfig = null;
@@ -96,6 +97,12 @@ public class JFinalFilter implements Filter {
 		}
 		
 		if (isHandled[0] == false) {
+			// 默认拒绝直接访问 jsp 文件，加固 tomcat、jetty 安全性
+			if (constants.getDenyAccessJsp() && isJsp(target)) {
+				com.jfinal.kit.HandlerKit.renderError404(request, response, isHandled);
+				return ;
+			}
+			
 			chain.doFilter(request, response);
 		}
 	}
@@ -125,5 +132,29 @@ public class JFinalFilter implements Filter {
 	
 	static void initLog() {
 		log = Log.getLog(JFinalFilter.class);
+	}
+	
+	boolean isJsp(String t) {
+		char c;
+		int end = t.length() - 1;
+		
+		if ( (end > 3) && ((c = t.charAt(end)) == 'x' || c == 'X') ) {
+			end--;
+		}
+		
+		if ( (end > 2) && ((c = t.charAt(end)) == 'p' || c == 'P') ) {
+			end--;
+			if ( (end > 1) && ((c = t.charAt(end)) == 's' || c == 'S') ) {
+				end--;
+				if ( (end > 0) && ((c = t.charAt(end)) == 'j' || c == 'J') ) {
+					end--;
+					if ( (end > -1) && ((c = t.charAt(end)) == '.') ) {
+						return true;
+					}
+				}
+			}
+		}
+		
+		return false;
 	}
 }

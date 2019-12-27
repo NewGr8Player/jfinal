@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.jfinal.config.Constants;
 import com.jfinal.aop.Invocation;
 import com.jfinal.handler.Handler;
+import com.jfinal.kit.ReflectKit;
 import com.jfinal.log.Log;
 import com.jfinal.render.Render;
 import com.jfinal.render.RenderException;
@@ -46,6 +47,13 @@ public class ActionHandler extends Handler {
 	}
 	
 	/**
+	 * 子类覆盖 getAction 方法可以定制路由功能
+	 */
+	protected Action getAction(String target, String[] urlPara) {
+		return actionMapping.getAction(target, urlPara);
+	}
+	
+	/**
 	 * handle
 	 * 1: Action action = actionMapping.getAction(target)
 	 * 2: new Invocation(...).invoke()
@@ -58,7 +66,7 @@ public class ActionHandler extends Handler {
 		
 		isHandled[0] = true;
 		String[] urlPara = {null};
-		Action action = actionMapping.getAction(target, urlPara);
+		Action action = getAction(target, urlPara);
 		
 		if (action == null) {
 			if (log.isWarnEnabled()) {
@@ -117,7 +125,9 @@ public class ActionHandler extends Handler {
 		catch (Exception e) {
 			if (log.isErrorEnabled()) {
 				String qs = request.getQueryString();
-				log.error(qs == null ? target : target + "?" + qs, e);
+				String targetInfo = (qs == null ? target : target + "?" + qs);
+				String sign = ReflectKit.getMethodSignature(action.getMethod());
+				log.error(sign + " : " + targetInfo, e);
 			}
 			renderManager.getRenderFactory().getErrorRender(500).setContext(request, response, action.getViewPath()).render();
 		} finally {
